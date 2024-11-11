@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Home{% endblock %}</title>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+</head>
+<body>
+  
+
+{% block content %}
+{% if user.is_authenticated %}
+Hi {{ user.username }}!
+<h1>This is Home Page</h1>
+
+<h3><a href="{% url 'rooms' %}">Go To the Chat Room</a></h3>
+<br>
+<hr>
+
+<form action="{% url 'logout' %}" method="post">
+  {% csrf_token %}
+  <button type="submit">Log Out</button>
+</form>
+{% else %}
+
+<p>You are not logged in</p>
+<a href="{% url 'login' %}">Log In</a>
+{% endif %}
+{% endblock %}  
+</body>
+</html>

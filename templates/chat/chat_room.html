@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Chat Room{% endblock %}
+
+
+{% block content %}
+<style>
+  .chat-message.d-flex.justify-content-end .user-name {
+    text-align: right;
+  }
+</style>
+{% if user.is_authenticated %}
+
+<div class="container"
+  style="background: linear-gradient(135deg, #0dcaf0, #5a6ed3); padding: 20px; border-radius: 10px;">
+  <div class="row">
+    <div class="col-12">
+      <div class="alert alert-info d-flex justify-content-between align-items-center" role="alert"
+        style="background-color: #f0f4f7;">
+        <div>
+          <h5 class="text-capitalize">Chat Room - {{room_name}}</h5>
+        </div>
+        <a href="/accounts/logout/">
+          <button type="button" class="btn btn-secondary">Log Out</button>
+        </a>
+      </div>
+
+      <div class="chat-box" style="background-color: #f8f9fa; padding: 10px; border-radius: 10px; position: relative;">
+        <div class="messages jumbotron" id="chatbox"
+          style="padding: 15px; max-height: 350px; overflow-y: auto; border: 1px solid #dee2e6; background-color: #ffffff;">
+          {% if messages %}
+          {% for message in messages %}
+          <div
+            class="chat-message d-flex {% if message.user == request.user %}justify-content-end{% else %}justify-content-start{% endif %}"
+            style="margin-bottom: 15px;">
+            <!-- User image -->
+            <!-- <div class="user-image" style="margin-right: 10px;">
+                     <img src="https://via.placeholder.com/40" alt="User Image" style="border-radius: 50%;">
+                  </div> -->
+            <!-- Chat message container -->
+            <div class="message-container">
+              <!-- Username -->
+              <div class="user-name" style="font-weight: bold; margin-bottom: 5px; font-size: 14px;">
+                {{ message.user.username }}
+              </div>
+              <!-- Message content -->
+              <div class="message-content"
+                style="max-width: 100%; padding: 5px 10px; border-radius: 10px; color:#ffffff; background-color: {% if message.user == request.user %}#5271e1{% else %}#8b22ad{% endif %};">
+                {{ message.content }}
+              </div>
+              <!-- Timestamp -->
+              <div class="message-timestamp" style="margin-top: 5px; font-size: 0.85rem; color: #999;">
+                {{ message.timestamp|date:"H:i A" }}
+
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+          {% else %}
+          <p class="text-muted">No messages in this room yet.</p>
+          {% endif %}
+        </div>
+
+        <div class="form-group mt-3 d-flex">
+          <input class="form-control" id="my_input" type="text" placeholder="Type a message..." required
+            style="flex-grow: 1;">
+          <button class="btn btn-primary ml-2" id="submit_button" type="button">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ slug|json_script:"room_slug" }}
+
+<script>
+  const chatbox = document.querySelector("#chatbox");
+
+  function scrollToBottom() {
+    chatbox.scrollTop = chatbox.scrollHeight;
+  }
+
+  scrollToBottom();
+
+  const roomName = JSON.parse(document.getElementById('room_slug').textContent);
+  const chatSocket = new WebSocket("ws://" + window.location.host + "/ws/" + roomName + "/");
+
+  chatSocket.onopen = function () {
+    console.log("WebSocket connection established.");
+  };
+
+  chatSocket.onclose = function () {
+    console.log("WebSocket connection closed.");
+  };
+
+  chatSocket.onerror = function (e) {
+    console.error("WebSocket error: ", e);
+  };
+
+  document.querySelector("#my_input").focus();
+  document.querySelector("#my_input").onkeyup = function (e) {
+    if (e.keyCode === 13) {
+      e.preventDefault();
+      document.querySelector("#submit_button").click();
+    }
+  };
+
+  document.querySelector("#submit_button").onclick = function () {
+    const messageInput = document.querySelector("#my_input").value.trim();
+
+    if (!messageInput) {
+      alert("Please enter a message before sending.");
+    } else if (chatSocket.readyState === WebSocket.OPEN) {
+      chatSocket.send(JSON.stringify({
+        message: messageInput,
+        username: "{{ request.user.username }}",
+        room_name: "{{ room_name }}"
+      }));
+      document.querySelector("#my_input").value = ""; // Clear input after sending
+    } else {
+      console.error("WebSocket is not open. Current state: " + chatSocket.readyState);
+    }
+  };
+
+  chatSocket.onmessage = function (e) {
+    const data = JSON.parse(e.data);
+    const messageElement = document.createElement("div");
+    const isCurrentUser = data.username === "{{ request.user.username }}";
+    const alignmentClass = isCurrentUser ? "justify-content-end" : "justify-content-start";
+    const backgroundColor = isCurrentUser ? "#5271e1" : "#8b22ad";
+
+    messageElement.classList.add("chat-message", "d-flex", alignmentClass);
+    messageElement.innerHTML = `
+        <div class="message-container">
+          <div class="user-name" style="font-weight: bold; margin-bottom: 5px; font-size: 14px;">
+            ${data.username}
+          </div>
+          <div class="message-content" style="max-width: 100%; padding: 10px; border-radius: 15px; color:#ffffff; background-color: ${backgroundColor};">
+            ${data.message}
+          </div>
+          <div class="message-timestamp" style="margin-top: 5px; font-size: 0.85rem; color: #999;">
+            ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </div>
+        </div>`;
+
+    document.querySelector("#chatbox").appendChild(messageElement);
+    scrollToBottom();
+  };
+</script>
+
+{% else %}
+<div class="container">
+  <div class="alert alert-warning d-flex justify-content-between align-items-center" role="alert">
+    <h5>You are not logged in</h5>
+    <a href="{% url 'login' %}">
+      <button type="button" class="btn btn-primary">Log In</button>
+    </a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
