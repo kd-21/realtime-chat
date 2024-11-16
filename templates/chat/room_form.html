@@ -1,0 +1,85 @@
+<form id="roomForm" method="post" action="{% url 'room-create' %}">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="name">Room Name:</label>
+        <input type="text" name="name" id="name" class="form-input" placeholder="Enter room name" required>
+    </div>
+    <button type="submit" class="form-button">Create Room</button>
+</form>
+
+<style>
+    /* Form container styling */
+    #roomForm {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid #e3e3e3;
+        border-radius: 10px;
+        background-color: #f9f9f9;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Form group styling */
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    /* Label styling */
+    label {
+        display: block;
+        font-size: 1rem;
+        color: #333;
+        margin-bottom: 8px;
+    }
+
+    /* Input field styling */
+    .form-input {
+        width: 100%;
+        padding: 10px;
+        font-size: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        outline: none;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-input:focus {
+        border-color: #5271e1;
+        box-shadow: 0 0 5px rgba(82, 113, 225, 0.5);
+    }
+
+    /* Button styling */
+    .form-button {
+        width: 100%;
+        padding: 10px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #fff;
+        background-color: #5271e1;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .form-button:hover {
+        background-color: #4159b5;
+        transform: scale(1.02);
+    }
+
+    .form-button:active {
+        background-color: #324498;
+    }
+
+    /* Responsive styling */
+    @media (max-width: 480px) {
+        #roomForm {
+            padding: 15px;
+        }
+
+        .form-button {
+            font-size: 1rem;
+        }
+    }
+</style>
